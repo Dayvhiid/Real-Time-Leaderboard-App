@@ -31,6 +31,26 @@ const validateLogin = [
     .withMessage('Password is required')
 ];
 
+// Validation rules for score submission
+const validateScore = [
+  body('gameType')
+    .isIn(['puzzle', 'racing', 'quiz', 'arcade', 'strategy'])
+    .withMessage('Invalid game type'),
+    
+  body('score')
+    .isInt({ min: 0 })
+    .withMessage('Score must be a positive integer'),
+    
+  body('level')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Level must be a positive integer'),
+    
+  body('duration')
+    .isInt({ min: 0 })
+    .withMessage('Duration must be a positive integer (in seconds)')
+];
+
 // Middleware to handle validation errors
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -43,4 +63,4 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-export { validateRegister, validateLogin, handleValidationErrors };
+export { validateRegister, validateLogin, validateScore, handleValidationErrors };

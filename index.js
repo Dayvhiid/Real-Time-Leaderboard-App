@@ -2,14 +2,15 @@ import mongoose from 'mongoose';
 import express from 'express';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import scoreRoutes from './routes/scoreRoutes.js';
 import { handleValidationErrors } from './middleware/validation.js';
-
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+app.use('/api/scores', scoreRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
        .then(() => {
