@@ -1,5 +1,6 @@
 import Score from '../models/Score.js';
 import User from '../models/User.js';
+import leaderboardService from '../services/leaderboardService.js';
 
 // Submit a new score
 const submitScore = async (req, res) => {
@@ -19,12 +20,30 @@ const submitScore = async (req, res) => {
     await newScore.save();
 
     // Update user's total score and games played
-    await User.findByIdAndUpdate(userId, {
+    const updatedUser = await User.findByIdAndUpdate(userId, {
       $inc: { 
         totalScore: score,
         gamesPlayed: 1
       }
-    });
+    }, { new: true });
+
+    // Update Redis leaderboards
+    try {
+      // Update global leaderboard with new total score
+      await leaderboardService.updateGlobalLeaderboard(userId, updatedUser.totalScore);
+      
+      // Update game-specific leaderboard (use the highest score for this game)
+      const userBestInGame = await Score.findOne({ userId, gameType })
+        .sort({ score: -1 })
+        .limit(1);
+      
+      if (userBestInGame) {
+        await leaderboardService.updateGameLeaderboard(gameType, userId, userBestInGame.score);
+      }
+    } catch (redisError) {
+      console.warn('Redis update failed:', redisError.message);
+      // Continue even if Redis fails - we still saved to MongoDB
+    }
 
     res.status(201).json({
       message: 'Score submitted successfully',
